@@ -1,0 +1,90 @@
+import sqlite3
+
+# --- CONFIGURACIÓN Y CREACIÓN DE DATOS DE PRUEBA ---
+# Nos conectamos a una base de datos temporal en la memoria RAM
+conexion = sqlite3.connect(':memory:')
+cursor = conexion.cursor()
+
+# Creamos la tabla ventas_tecnologia
+cursor.execute('''
+CREATE TABLE ventas_tecnologia (
+    id_venta INTEGER PRIMARY KEY,
+    producto TEXT,
+    categoria TEXT,
+    precio_unitario REAL,
+    cantidad INTEGER,
+    fecha TEXT,
+    pais TEXT
+)
+''')
+
+# Insertamos algunos datos de prueba para que las consultas muestren resultados
+datos_prueba = [
+    (1, 'Laptop Pro', 'Computación', 1200.00, 10, '2026-10-01', 'Colombia'),
+    (2, 'Mouse Inalámbrico', 'Accesorios', 25.50, 5, '2026-10-02', 'Argentina'),
+    (3, 'Monitor 4K', 'Computación', 600.00, 2, '2026-10-03', 'Colombia'),
+    (4, 'Teclado Genérico', None, 15.00, 20, '2026-10-04', 'Chile'), # ACÁ ESTÁ EL CAMBIO (None en vez de NULL)
+    (5, 'Smartphone X', 'Telefonía', 800.00, 15, '2026-10-05', 'México')
+]
+# ----------------------------------------------------
+
+
+# --- TAREAS DE LA PRÁCTICA SQL ---
+
+print("--- 1. Selección Simple ---")
+# ¿Cuáles son los productos disponibles y cuál es su precio, ordenados alfabéticamente?
+cursor.execute('''
+    SELECT producto, precio_unitario 
+    FROM ventas_tecnologia 
+    ORDER BY producto ASC;
+''')
+for fila in cursor.fetchall():
+    print(fila)
+
+
+print("\n--- 2. Filtrado Crítico ---")
+# ¿Qué ventas de alto valor (precio mayor a $500) se realizaron específicamente en Colombia?
+cursor.execute('''
+    SELECT * 
+    FROM ventas_tecnologia 
+    WHERE pais = 'Colombia' AND precio_unitario > 500;
+''')
+for fila in cursor.fetchall():
+    print(fila)
+
+
+print("\n--- 3. Búsqueda de Nulos ---")
+# ¿Existen registros de ventas a los que les falte la información de la categoría?
+cursor.execute('''
+    SELECT * 
+    FROM ventas_tecnologia 
+    WHERE categoria IS NULL;
+''')
+for fila in cursor.fetchall():
+    print(fila)
+
+
+print("\n--- 4. Análisis de Rendimiento (Agregación) ---")
+# ¿Cuál es el total de ingresos generados por cada categoría de producto?
+cursor.execute('''
+    SELECT categoria, SUM(cantidad * precio_unitario) AS ingresos_totales 
+    FROM ventas_tecnologia 
+    GROUP BY categoria;
+''')
+for fila in cursor.fetchall():
+    print(fila)
+
+
+print("\n--- 5. Filtro de Élite (HAVING) ---")
+# ¿Cuáles son las categorías "estrella" que han superado los $10,000 en ingresos totales?
+cursor.execute('''
+    SELECT categoria, SUM(cantidad * precio_unitario) AS ingresos_totales 
+    FROM ventas_tecnologia 
+    GROUP BY categoria 
+    HAVING SUM(cantidad * precio_unitario) > 10000;
+''')
+for fila in cursor.fetchall():
+    print(fila)
+
+# Cerramos la conexión
+conexion.close()
